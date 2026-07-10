@@ -1,19 +1,15 @@
 # Basketball Shot Tracker
 My project is a complete basletball shot analytics system. Using 2 parts (a hoop module and wrist device) it gives data about a player's shot - with metrics like shot demogrpahics, wrist measurements, and shooting percentages - facilaitating a players improvement with real data to drive real results.
 
-You should comment out all portions of your portfolio that you have not completed yet, as well as any instructions:
-```HTML 
-<!--- This is an HTML comment in Markdown -->
-<!--- Anything between these symbols will not render on the published site -->
 ```
 
 | **Engineer** | **School** | **Area of Interest** | **Grade** |
 |:--:|:--:|:--:|:--:|
 | Lochlan McCarroll | Los Altos High School | Electrical Engineering | Incoming Freshman
 
-**Replace the BlueStamp logo below with an image of yourself and your completed project. Follow the guide [here](https://tomcam.github.io/least-github-pages/adding-images-github-pages-site.html) if you need help.**
 
-![Headstone Image](logo.svg)
+
+
   
 # Final Milestone
 
