@@ -1,5 +1,5 @@
 # Basketball Shot Tracker
-Replace this text with a brief description (2-3 sentences) of your project. This description should draw the reader in and make them interested in what you've built. You can include what the biggest challenges, takeaways, and triumphs from completing the project were. As you complete your portfolio, remember your audience is less familiar than you are with all that your project entails!
+My project is a complete basletball shot analytics system. Using 2 parts (a hoop module and wrist device) it gives data about a player's shot - with metrics like shot demogrpahics, wrist measurements, and shooting percentages - facilaitating a players improvement with real data to drive real results.
 
 You should comment out all portions of your portfolio that you have not completed yet, as well as any instructions:
 ```HTML 
@@ -47,14 +47,11 @@ For your second milestone, explain what you've worked on since your previous mil
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/CaCazFBhYKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-For my first milestone, I built the hoop module of the overall system. 
+For my first milestone, I designed and built the first prototype of the hoop module for my basketball shot analytics system.  The prototype used an ESP32 microcontroller (Later changed to an arduino nano) mounted to the hoop, an infrared (IR) transmitter and receiver pair, and piezoelectric vibration sensors attached around the rim. The IR sensor pair was used to detect when a basketball passed completely through the hoop, confirming a made shot, while the piezoelectric sensors were positioned around the rim to measure the vibrations created by ball impacts. The long-term goal of these sensors is to help identify where the ball contacted the rim, allowing the system to estimate common miss tendencies such as front rim, back rim, left, or right.
 
+Throughout this milestone, I learned how to program and interface with the ESP32 microcontroller, which was my first experience using the platform. I successfully connected sensors using I²C communication, collected real-time sensor data through the Serial Monitor, and developed software to detect and filter impact events. Before deciding on the final sensing approach, I experimented extensively with an MPU-6050 inertial measurement unit mounted directly to the hoop. This allowed me to study how vibrations propagated through the rim after different impacts and helped me better understand the strengths and limitations of using an accelerometer for impact detection. Through this testing, I discovered that while the MPU-6050 could reliably detect that an impact had occurred, it was difficult to determine exactly where the ball struck the rim because vibrations quickly spread throughout the entire hoop. Because of this, I redesigned the sensing approach and transitioned from using multiple MPU-6050 sensors to piezoelectric vibration sensors. Piezoelectric sensors are better suited for detecting localized (meaning like where the ball actaully strikes) impacts because they respond directly to the strain in the metal near where the ball makes contact. This design change simplified the hardware while also increasing the likelihood of obtaining useful information about impact location.
 
-For your first milestone, describe what your project is and how you plan to build it. You can include:
-- An explanation about the different components of your project and how they will all integrate together
-- Technical progress you've made so far
-- Challenges you're facing and solving in your future milestones
-- What your plan is to complete your project
+One of the biggest engineering challenges during this milestone was designing a mounting system that was rigid enough to produce consistent sensor data while still being practical to prototype. I experimented with different mounting locations and attachment methods before determining that securely mounting the sensors to the rigid steel support structure produced more consistent measurements than allowing them to move independently. Another challenge was deciding which sensing technology would provide the most meaningful data. Rather than immediately building the complete system, I followed an iterative engineering process by testing each sensor individually, analyzing its performance, and using those results to guide future design decisions.
 
 # Schematics 
 Here's where you'll put images of your schematics. [Tinkercad](https://www.tinkercad.com/blog/official-guide-to-tinkercad-circuits) and [Fritzing](https://fritzing.org/learning/) are both great resoruces to create professional schematic diagrams, though BSE recommends Tinkercad becuase it can be done easily and for free in the browser. 
