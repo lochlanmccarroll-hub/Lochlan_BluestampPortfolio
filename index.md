@@ -28,6 +28,8 @@ For your final milestone, explain the outcome of your project. Key details to in
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/y3VAmNlER5Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
+https://www.youtube.com/watch?v=IMOSZjr0L8E 
+
 ### Milestone 2 – Wrist-Sleeve Motion Module
 
 For my second milestone, I designed and built the wrist-sensing module for my basketball shot analytics system. The purpose of this module was to measure the motion of the shooter’s wrist during a release and collect data that could later be compared with the result detected by the hoop module from Milestone 1. The wrist module used an LSM6DS3 inertial measurement unit (IMU) mounted securely to the middle of the back of the shooting wrist, along with an Arduino Nano ESP32 as the temporary development board. 
@@ -62,6 +64,8 @@ The Arduino Nano ESP32 was used as a temporary development platform because it a
 
 
 # First Milestone
+
+https://www.youtube.com/watch?v=vPbgvMoHv5M
 
 **Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
 
