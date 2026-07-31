@@ -7,21 +7,162 @@ ShotSync is a wireless basketball analytics system consisting of a wrist-mounted
 
 
   
-# Final Milestone
+# Final Milestone – Wireless Integration and Analytics Dashboard
 
 **Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/F7M7imOVGug" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-For your final milestone, explain the outcome of your project. Key details to include are:
-- What you've accomplished since your previous milestone
-- What your biggest challenges and triumphs were at BSE
-- A summary of key topics you learned about
-- What you hope to learn in the future after everything you've learned at BSE
+For my final milestone, I integrated the wrist and hoop modules into one complete wireless basketball analytics system. Milestones 1 and 2 established the two separate sensing systems: the hoop module classified the result of the shot, while the wrist module detected likely releases and measured wrist motion. The goal of Milestone 3 was to connect these modules, pair their detections, calculate useful shooting metrics, and display the results through an athlete-facing dashboard.
+
+By the end of this milestone, ShotSync consisted of three main parts:
+
+A battery-powered wrist module using a XIAO nRF52840 Sense.
+A battery-powered hoop module using a Nano ESP32, an infrared sensor pair, and a piezoelectric vibration sensor.
+A Python analytics program and Streamlit web dashboard running on a computer.
 
 
+Miniaturizing the Wrist Module:
 
-# Second Milestone
+The first major task was transferring the wrist system from the larger Arduino Nano ESP32 and external LSM6DS3 IMU used during development to a Seeed Studio XIAO nRF52840 Sense.
+The XIAO was much better suited for a wearable device because it was a smaller physical board, had an onboard LSM6DS3TR-C, supported Bluetooth Low Energy, Battery-power support, and
+enough processing power to record and filter motion data. Because the IMU was built directly into the XIAO, I no longer needed a separate sensor board or several loose jumper wires. I soldered the remaining connections and mounted the board securely on the back of the shooting wrist. The wrist IMU sampled motion at approximately 104 times per second, or once every 9.6 milliseconds. The system continuously stored recent samples in a circular pre-release buffer. A circular release buffer was used because the XIAO is always saving the newest sensor readings in a fixed-size memory area. When that area fills, new readings replace the oldest ones. Therefore, when a release is detected, the program still has measurements from immediately before detection. When the gyroscope pattern matched the release-candidate conditions (wrist moved in a shot-like motion), the program saved approximately half a second of motion from before the trigger and half a second after it. This created a motion window containing the complete development of the release instead of only measuring the instant when a threshold was crossed.
+
+<img width="425" height="428" alt="image" src="https://github.com/user-attachments/assets/92bfd1fc-b436-4aa6-9a3f-047fbb0ca130" />
+
+Adding Bluetooth to Both Modules:
+
+I next added Bluetooth Low Energy communication to both the wrist and hoop modules. In the final Bluetooth architecture, the XIAO and Nano ESP32 acted as Bluetooth peripheral devices. 
+The computer acted as the Bluetooth central device. A Python program used the Bleak library to search for both modules, connect to them, subscribe to their data characteristics (meaning look for data if they send it), and automatically attempt to reconnect if either device disconnected. The wrist and hoop used separate Bluetooth services and characteristic identifiers so the computer could distinguish the two data sources. The hoop module had a relatively simple communication job. It only needed to send one small event packet after classifying a result. That packet included information such as:
+
+* Hoop event number
+* Microcontroller timestamp
+* Shot result
+* Whether rim contact occurred
+* Piezoelectric peak
+* Infrared beam-break duration
+
+The result was encoded as one of three categories:
+
+* CLEAN_MAKE
+* MAKE_WITH_RIM_CONTACT
+* RIM_MISS
+
+
+Solving Wrist Data Transmission:
+
+Bluetooth communication was more difficult for the wrist module because each shot contained an entire sequence of sensor readings rather than one result. My first approach converted every wrist sample into a long line of text containing the timestamp, acceleration values, and gyroscope values. However, Bluetooth Low Energy commonly transfers small pieces of data at a time. Each text line had to be divided into multiple transmissions, producing a large amount of Bluetooth traffic. Some pieces arrived late or failed to arrive, which meant that reconstructed shots occasionally contained missing samples. What this means, was that if someone was to shoot multiple shots in a row without waiting, the system would miss them because it would transmitting. 
+
+To fix this, I sent the data using binary packets. Each transmitted wrist sample became one fixed 20-byte packet containing:
+* A packet marker
+* A protocol version
+* Shot identification number
+* Sample index
+* Time relative to the detected release
+* Three acceleration measurements
+* Three gyroscope measurements
+
+A binary packet works by storing numbers directly as bytes instead of converting them to written characters. For example, to send the number 150 as text, the XIAO must look up the text character for "1", "5", and "0". Each character requires 1 byte of data. Total size transmitted: 3 bytes (and if you add a comma or space, it becomes 4 bytes). In binary, the number 150 is just a value. A standard small integer can hold any value from 0 to 255 using exactly one byte. This means it can send more data faster. Also, when sending everything as text, it causes the message to be "cut up". If a string of text that holds all the data is over 20 bytes, it gets split and the program has to "glue" it back together once transmitted. 
+
+The wrist also used acknowledged Bluetooth indications for important data. Unlike an unacknowledged notification, an indication requires the receiving computer to confirm that the packet arrived. Reliability was more important than transmitting many rapid shots, so this was an effective tradeoff.
+
+Each packet also contained a shot number and sample index. This made sure the Python Program could accurately pair the wrist and hoop bluetooth transmissions. Place samples in the correct shot
+Restore their correct order
+Ignore duplicate packets
+Detect missing packets
+Confirm when a complete motion window had arrived
+Pairing Wrist and Hoop Events
+
+
+After both Bluetooth connections worked, I created a Python integration program that combined the two independent event streams. The wrist and hoop did not share the same internal clock. Each microcontroller started its timer when it powered on, so their raw timestamps could not be compared directly. Instead, the Python program recorded the computer’s monotonic arrival time whenever it received an event. A monotonic clock measures elapsed time and cannot move backward if the computer’s displayed clock changes. This made it more appropriate for matching sensor events than a normal date-and-time clock. When the wrist detected a release candidate, Python stored it in a queue of pending wrist events. When the hoop reported a result, Python stored that event in a queue of pending hoop events. The program searched for the most recent valid wrist candidate that occurred within the allowed timing window around the hoop event.
+The pairing window allowed the hoop event to arrive slightly before the wrist event because Bluetooth messages could be delayed or processed in a different order. A hoop event could be paired with a wrist candidate from 0.20 seconds later to 2.75 seconds earlier. Events that were not paired within approximately 3.5 seconds expired so they could not accidentally match a later shot.
+
+Once a valid pair was found, the program associated:
+
+One wrist release candidate
+One complete wrist-motion sample window
+One hoop result
+
+The program only wrote a completed shot after it possessed both the paired hoop result and the finished wrist analytics. This prevented incomplete shots from appearing on the dashboard.
+
+This architecture also handled false wrist triggers. A pass or unusual wrist movement could occasionally create a release candidate, but it would not become a completed shot unless a corresponding hoop event occurred.
+
+Calculating Wrist Analytics:
+
+After receiving the complete sample window, Python calculated several wrist-motion metrics like the following. 
+
+Peak Wrist Speed
+
+For every sample, the program combined the three gyroscope axes to calculate total angular speed. The largest value in the window became the peak wrist speed, measured in degrees per second. This represented the fastest rotational moment captured during the release.
+
+Motion Onset
+
+To estimate when the main shooting movement began, the program examined the samples before the main gyroscope peak. It searched backward for a short sequence of relatively quiet samples (dormant wrist movement), then treated the following sample as the beginning of the release movement. The quiet-motion threshold adjusted according to the baseline noise in that particular shot window. This was more reliable than using one fixed threshold for every motion.
+
+Snap Duration
+
+Snap duration measured how long the main wrist-speed peak remained above 40% of its maximum value. The program began at the peak, searched backward until angular speed fell below 40% of the peak, and then searched forward until it fell below that level again. The time between those boundaries became the snap duration. This metric described the width of the main wrist-speed peak, not simply whether the wrist moved quickly.
+
+Follow-Through
+
+Follow-through was estimated as the time between the release trigger and the point when the wrist returned to relatively low motion. To avoid treating a single low reading as the end of the movement, the program required five consecutive low-motion samples. This helped distinguish genuine settling from a brief fluctuation in the sensor data.
+
+Estimated Wrist Rotation
+
+The gyroscope measured angular velocity rather than angle directly. To estimate how far the wrist rotated, Python integrated each gyroscope axis over time. 
+Integration finds the area under an angular-velocity-versus-time graph. Since angular velocity was measured in degrees per second, integrating it over seconds produced an estimated rotation in degrees. The program used trapezoidal integration, which approximated the area between each pair of measurements as a trapezoid. The system calculated estimated rotation around the X, Y, and Z axes. These values were estimates because small gyroscope errors accumulate during integration, but the captured window was short enough to make them useful for comparing releases. This took help from AI because I did not know much calculus as a incoming freshman. 
+
+Release Acceleration
+
+The system combined the three accelerometer axes to calculate total acceleration. It recorded both the acceleration at the estimated release marker and the largest acceleration observed anywhere in the motion window. The displayed acceleration included gravity, so it represented the total acceleration measured by the device rather than only acceleration created by the athlete.
+
+Athlete Profiles and Personal Baselines:
+
+I added athlete accounts so that multiple players could use the same hardware without combining their data. Before shooting, the user selected an athlete on the dashboard. When the wrist detected a release, Python recorded the currently selected athlete and assigned the completed shot to that account. This ensured that switching accounts while a shot was still processing would not move it to the wrong athlete. Although the program continued using timestamped session files internally, the website hid those files from the athlete. Instead, it combined all shots belonging to one athlete into a continuing history. Each athlete developed a personal baseline from their previous shots. This was important because ShotSync was not intended to claim that every basketball player should have the same wrist speed, snap duration, or rotation. Different athletes can shoot in different ways and still be sucessful. 
+Form Match Score
+
+The dashboard generated a Form Match score after the athlete had at least five previous shots. The baseline could include up to the 15 most recent prior shots. The score compared these. six metrics: Peak wrist speed, Snap duration, Time from motion onset to release, Follow-through duration, Primary-axis rotation, Secondary-axis rotation. For each metric, the program calculated how much the current shot was different from the athlete’s baseline average. It then divided that difference by a scale based on the baseline’s normal variation. This normalization was important. A difference of 20 milliseconds might be significant for one metric but insignificant for another. Dividing by each metric’s normal spread allowed the different measurements to contribute more fairly to the combined score. Minimum scale values were also used so that a baseline with almost no numerical variation would not make a tiny difference appear extremely important. The normalized differences were averaged and converted into a score from 0 to 100. Larger deviations reduced the score using an exponential function.
+A high Form Match therefore meant that the shot’s wrist mechanics were similar to the athlete’s recent baseline. It did not mean that the release was universally correct, nor did it guarantee that the shot would go in. All in all, Form Match measured mechanical consistency, not perfect technique. This is actually cruical for someones shot because an inconsistent is a clear sign a player has a mistake in there form, like a thumb flick (shooting the ball with assistance from your off hand), an incomplete follow through (stopping your shot too early), or hitching/pausing on the way up (bring the ball over your head or pausing before shooting). 
+
+Building the Web Dashboard:
+
+I developed the final website using Streamlit and Plotly.
+
+The dashboard displayed:
+- Wrist and hoop connection status
+- Current athlete
+- Current workout statistics
+- Makes, misses, and shooting percentage
+- Current streak
+- Latest shot result
+- Form Match
+- Peak wrist speed
+- Snap duration
+- Follow-through
+- Primary wrist rotation
+- Release acceleration
+- Raw wrist-motion graphs
+- Athlete history
+- Make-versus-miss comparisons
+
+Major Challenges and Solutions:
+
+One of the largest challenges was distinguishing real shots from passes, pump fakes, and random wrist movements. My Milestone 2 data showed that total angular speed alone was not enough because some non-shot movements could produce equal or greater gyroscope peaks. I first improved the rule-based detector using axis direction and dominance, then made the larger architectural decision to let the hoop confirm whether a wrist candidate became a real basketball event. A second challenge was reliably transferring the wrist-motion window over Bluetooth. Long text messages produced too much fragmented traffic and resulted in incomplete shots. I solved this by creating compact binary packets, scaling floating-point values into integers, transmitting fewer samples, including shot and sample identifiers, and using acknowledged indications. A third challenge was combining two independent Bluetooth devices. The wrist and hoop could connect, disconnect, or advertise at different times. I created separate connection loops, automatic reconnection behavior, and a controlled Bluetooth scanning process so both modules could operate simultaneously.A fourth challenge was pairing events without a shared clock. I solved this by timestamping both event streams when they arrived at the computer and matching them within a controlled time window.
+
+The greatest triumph of this milestone was turning several independent prototypes into one complete system. The final project combined all the sensor hardware, microcontroller programming, Bluetooth communication, signal processing, data storage, event matching, analytics, athlete profiles, and user-interface design. 
+
+Milestone 3 Outcome:
+
+By the completion of Milestone 3, ShotSync operated as a complete wireless basketball analytics system.
+
+The final system could detect likely releases from a wrist-mounted IMU and capture the motion before and after the release, calculating wrist-speed, timing, acceleration, and rotation metrics. The hoop could classify clean makes, rim-contact makes, and rim misses. Both devices transmit data from both modules over Bluetooth. Python prgrams pair wrist and hoop events
+reject unconfirmed wrist movements, and save summary and raw data. The web dashboard then maintains separate athlete profiles, build personal shooting baselines, and displays results through a live web dashboard. 
+
+Future Improvements:
+
+The next step would be validating ShotSync with a larger and more diverse dataset. I primarily developed the release detector and analytics using a limited number of athletes (my instructors and peers). Testing with more players would show which thresholds should be personalized and which measurements remain useful across different shooting forms (what values vary greatly between players and which ones stay roughly the same). I would also like to test the system more extensively on a regulation hoop and redesign the hoop sensors into a quicker clip-on mounting system. Custom 3D-printed enclosures could protect the electronics, hold the sensors in repeatable positions, and improve the appearance of both modules. With enough labeled data, I could investigate which wrist measurements correlate with high shooting percentage for individual athletes. Eventually, ShotSync could predict if you make or miss a shot based on your form and mechanics. Because it knows so much about your shot and what happens when you miss, a future version could also connect meaningful baseline deviations with coach-reviewed training recommendations. For example, the dashboard might recognize that an athlete’s snap duration or primary rotation was unusually different and suggest a relevant form-shooting drill or instructional video. 
+
+# Second Milestone - Wrist IMU and Release Detection
 
 **Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
 
@@ -33,9 +174,13 @@ https://www.youtube.com/watch?v=IMOSZjr0L8E
 
 For my second milestone, I designed and built the wrist-sensing module for my basketball shot analytics system. The purpose of this module was to measure the motion of the shooter’s wrist during a release and collect data that could later be compared with the result detected by the hoop module from Milestone 1. The wrist module used an LSM6DS3 inertial measurement unit (IMU) mounted securely to the middle of the back of the shooting wrist, along with an Arduino Nano ESP32 as the temporary development board. 
 
+Detecting a Release:
+
 The IMU measured three-axis linear acceleration and three-axis angular velocity at approximately 104 samples per second. Sampling at approximately 104 Hz meant that the IMU collected a new measurement roughly every 9.6 milliseconds. This was fast enough to capture the short wrist-snap motion and observe how angular velocity changed before, during, and after release. I programmed the system to record the X, Y, and Z acceleration values, total acceleration, X, Y, and Z gyroscope values, total angular velocity, and timestamps. These axis directions depended on the physical orientation of the IMU. I therefore mounted the sensor consistently on the back of the right wrist so that the same shooting motion would produce comparable X-, Y-, and Z-axis patterns across trials. I did a variety of testing the IMU for calibration and determining key variables that are apparent in someones shot. Some examples include still calibration compared to gravity and rotating it in different directions to understand how the physical movement would correspond to the different sensor axises. This helped me determine which gyroscope axes were most important during the forward wrist snap of a shooting motion.
 
 I created a labeled motion dataset by recording each trial as a CSV file and identifying the movement performed during that trial. I then compared the gyroscope and acceleration patterns across shots, passes, pump fakes, random wrist movements, and stillness. Using those comparisons, I developed rule-based detector that looked for a combination of angular-speed thresholds, axis directions, and consecutive matching samples. The data showed that the real shooting motions were relatively consistent. The main releases produced high angular velocities, with peak total gyroscope measurements generally between approximately 1,400 and 1,700 degrees per second. The Y-axis rotation was strongly negative and was the dominant axis during each recorded shot, while the Z-axis also followed a consistent negative rotation pattern. Requiring the pattern to remain present for several consecutive samples reduced the chance that one brief sensor spike or electrical-noise value would trigger a release candidate. Shooting motions without a ball produced a similar directional pattern, although they generally had lower angular speeds. This showed that the IMU could recognize the general structure of a basketball release and could also measure differences in release intensity - a major development in the project. 
+
+Fixing False Triggers: 
 
 An important learning from this milestone was that total wrist speed alone was not enough to identify a shot. Some random wrist flicks produced angular velocities that were equal to or greater than the real shooting motions. However, those movements usually rotated around different axes or in different directions (imagine flinging your wrist backwards or rapidly raising your hand). Because of this, I developed a preliminary release-candidate detector that considered both the total angular velocity and the directional gyroscope pattern. Rather than triggering from any fast wrist movement, the detector looked for a combination of high total rotation, strongly negative Y-axis rotation, and negative Z-axis rotation over multiple consecutive samples. 
 
@@ -53,7 +198,7 @@ The Arduino Nano ESP32 was used as a temporary development platform because it a
 
 Milestone 2 Outcome: I created a wrist-mounted IMU system that recorded high-speed motion data, identified likely release candidates, and calculated wrist-motion metrics. I also established that the wrist should measure mechanics and propose release candidates, while the hoop should confirm and classify the shot.
 
-# First Milestone
+# First Milestone - Hoop Module and Make/Miss Classification
 
 https://www.youtube.com/watch?v=vPbgvMoHv5M
 
@@ -62,6 +207,8 @@ https://www.youtube.com/watch?v=vPbgvMoHv5M
 <iframe width="560" height="315" src="https://www.youtube.com/embed/CaCazFBhYKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 For my first milestone, I designed and built the first prototype of the hoop module for my basketball shot analytics system. The prototype originally used a microcontroller mounted to the hoop, an infrared (IR) transmitter and receiver pair, and the piezoelectric vibration sensor attached around the rim.  The IR sensor pair was used to detect when a basketball passed completely through the hoop, confirming a made shot, while the piezoelectric sensor was positioned on the rim to measure the vibrations created by ball impacts. 
+
+MPU-6050 vs Piezoelectric Discs:
 
 Throughout this milestone, I learned how to program and interface with the ESP32 microcontroller. I initially tested the hoop module with an ESP32, then moved to a classic Arduino Nano during early prototyping because it gave me more reliable wired testing. In Milestone 3, I later transferred the working hoop logic to a Nano ESP32 so the module could communicate wirelessly over Bluetooth (see above). To detect vibrations, I originally experimented with an MPU-6050 inertial measurement unit mounted directly to the hoop. Through this testing, I discovered that while the MPU-6050 could reliably detect that an impact had occurred, it was difficult to determine exactly where (and if) the ball struck the rim because vibrations quickly spread throughout the entire hoop. Because of this, I redesigned the sensing approach and transitioned from using multiple MPU-6050 sensors to piezoelectric vibration sensors. 
 Piezoelectric discs produced clearer and more sensitive impact signals than the hoop-mounted IMU. However, testing multiple piezo also showed that vibration traveled throughout the metal rim, causing cross-triggering between sensors. Because exact front, back, left, and right impact classification was not consistently reliable, I simplified the final design and used the piezo primarily to determine whether rim contact occurred. 
