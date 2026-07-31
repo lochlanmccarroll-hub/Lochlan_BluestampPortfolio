@@ -145,6 +145,8 @@ The dashboard displayed:
 - Athlete history
 - Make-versus-miss comparisons
 
+
+
 Major Challenges and Solutions:
 
 One of the largest challenges was distinguishing real shots from passes, pump fakes, and random wrist movements. My Milestone 2 data showed that total angular speed alone was not enough because some non-shot movements could produce equal or greater gyroscope peaks. I first improved the rule-based detector using axis direction and dominance, then made the larger architectural decision to let the hoop confirm whether a wrist candidate became a real basketball event. A second challenge was reliably transferring the wrist-motion window over Bluetooth. Long text messages produced too much fragmented traffic and resulted in incomplete shots. I solved this by creating compact binary packets, scaling floating-point values into integers, transmitting fewer samples, including shot and sample identifiers, and using acknowledged indications. A third challenge was combining two independent Bluetooth devices. The wrist and hoop could connect, disconnect, or advertise at different times. I created separate connection loops, automatic reconnection behavior, and a controlled Bluetooth scanning process so both modules could operate simultaneously.A fourth challenge was pairing events without a shared clock. I solved this by timestamping both event streams when they arrived at the computer and matching them within a controlled time window.
