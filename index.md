@@ -2,25 +2,12 @@
 ShotSync is a wireless basketball analytics system consisting of a wrist-mounted motion sensor (IMU) and a hoop-mounted outcome detector. It pairs wrist mechanics with shot results and reports measurements such as peak wrist speed, snap duration, follow-through, makes, misses, and shooting percentage. It also determines how consistent someones shot is, a important feature to facilitate improvement. The goal is to give athletes objective data they can use to study the consistency of their shooting motion.
 
 | Lochlan McCarroll | Los Altos High School | Electrical Engineering | Incoming Freshman
-
-
-
-
   
 # Final Milestone – Wireless Integration and Analytics Dashboard
 
-**Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
+<iframe width="1018" height="572" src="https://www.youtube.com/embed/Jd8b29AiIYE" title="Lochlan M. Demo Night Presentation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/F7M7imOVGug" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
-For my final milestone, I integrated the wrist and hoop modules into one complete wireless basketball analytics system. Milestones 1 and 2 established the two separate sensing systems: the hoop module classified the result of the shot, while the wrist module detected likely releases and measured wrist motion. The goal of Milestone 3 was to connect these modules, pair their detections, calculate useful shooting metrics, and display the results through an athlete-facing dashboard.
-
-By the end of this milestone, ShotSync consisted of three main parts:
-
-A battery-powered wrist module using a XIAO nRF52840 Sense.
-A battery-powered hoop module using a Nano ESP32, an infrared sensor pair, and a piezoelectric vibration sensor.
-A Python analytics program and Streamlit web dashboard running on a computer.
-
+For my final milestone, I integrated the wrist and hoop modules into one complete wireless basketball analytics system. Milestones 1 and 2 established the two separate sensing systems: the hoop module classified the result of the shot, while the wrist module detected likely releases and measured wrist motion. The goal of Milestone 3 was to connect these modules, pair their detections, and calculate useful shooting metrics while displaying the results through an athlete dashboard. 
 
 Miniaturizing the Wrist Module:
 
@@ -77,15 +64,7 @@ Pairing Wrist and Hoop Events
 After both Bluetooth connections worked, I created a Python integration program that combined the two independent event streams. The wrist and hoop did not share the same internal clock. Each microcontroller started its timer when it powered on, so their raw timestamps could not be compared directly. Instead, the Python program recorded the computer’s monotonic arrival time whenever it received an event. A monotonic clock measures elapsed time and cannot move backward if the computer’s displayed clock changes. This made it more appropriate for matching sensor events than a normal date-and-time clock. When the wrist detected a release candidate, Python stored it in a queue of pending wrist events. When the hoop reported a result, Python stored that event in a queue of pending hoop events. The program searched for the most recent valid wrist candidate that occurred within the allowed timing window around the hoop event.
 The pairing window allowed the hoop event to arrive slightly before the wrist event because Bluetooth messages could be delayed or processed in a different order. A hoop event could be paired with a wrist candidate from 0.20 seconds later to 2.75 seconds earlier. Events that were not paired within approximately 3.5 seconds expired so they could not accidentally match a later shot.
 
-Once a valid pair was found, the program associated:
-
-One wrist release candidate
-One complete wrist-motion sample window
-One hoop result
-
-The program only wrote a completed shot after it possessed both the paired hoop result and the finished wrist analytics. This prevented incomplete shots from appearing on the dashboard.
-
-This architecture also handled false wrist triggers. A pass or unusual wrist movement could occasionally create a release candidate, but it would not become a completed shot unless a corresponding hoop event occurred.
+Once a valid pair was found, the program took one wrist release candidate, one complete wrist-motion sample window, and one hoop result. The program only wrote a completed shot after it possessed both the paired hoop result and the finished wrist analytics. This prevented incomplete shots from appearing on the dashboard. This architecture also handled false wrist triggers. A pass or unusual wrist movement could occasionally create a release candidate, but it would not become a completed shot unless a corresponding hoop event occurred.
 
 Calculating Wrist Analytics:
 
@@ -119,14 +98,15 @@ The system combined the three accelerometer axes to calculate total acceleration
 Athlete Profiles and Personal Baselines:
 
 I added athlete accounts so that multiple players could use the same hardware without combining their data. Before shooting, the user selected an athlete on the dashboard. When the wrist detected a release, Python recorded the currently selected athlete and assigned the completed shot to that account. This ensured that switching accounts while a shot was still processing would not move it to the wrong athlete. Although the program continued using timestamped session files internally, the website hid those files from the athlete. Instead, it combined all shots belonging to one athlete into a continuing history. Each athlete developed a personal baseline from their previous shots. This was important because ShotSync was not intended to claim that every basketball player should have the same wrist speed, snap duration, or rotation. Different athletes can shoot in different ways and still be sucessful. 
-Form Match Score
+Form Match Score. 
 
 The dashboard generated a Form Match score after the athlete had at least five previous shots. The baseline could include up to the 15 most recent prior shots. The score compared these. six metrics: Peak wrist speed, Snap duration, Time from motion onset to release, Follow-through duration, Primary-axis rotation, Secondary-axis rotation. For each metric, the program calculated how much the current shot was different from the athlete’s baseline average. It then divided that difference by a scale based on the baseline’s normal variation. This normalization was important. A difference of 20 milliseconds might be significant for one metric but insignificant for another. Dividing by each metric’s normal spread allowed the different measurements to contribute more fairly to the combined score. Minimum scale values were also used so that a baseline with almost no numerical variation would not make a tiny difference appear extremely important. The normalized differences were averaged and converted into a score from 0 to 100. Larger deviations reduced the score using an exponential function.
 A high Form Match therefore meant that the shot’s wrist mechanics were similar to the athlete’s recent baseline. It did not mean that the release was universally correct, nor did it guarantee that the shot would go in. All in all, Form Match measured mechanical consistency, not perfect technique. This is actually cruical for someones shot because an inconsistent is a clear sign a player has a mistake in there form, like a thumb flick (shooting the ball with assistance from your off hand), an incomplete follow through (stopping your shot too early), or hitching/pausing on the way up (bring the ball over your head or pausing before shooting). 
 
+
 Building the Web Dashboard:
 
-I developed the final website using Streamlit and Plotly.
+I developed the final website using Streamlit and Plotly. Images of the website are the 4 pictures you see above.
 
 The dashboard displayed:
 - Wrist and hoop connection status
@@ -144,6 +124,16 @@ The dashboard displayed:
 - Raw wrist-motion graphs
 - Athlete history
 - Make-versus-miss comparisons
+
+<img width="1187" height="781" alt="Screenshot 2026-07-31 at 3 34 33 PM" src="https://github.com/user-attachments/assets/b647ea39-02b9-4eed-b0ff-6493eea8cb56" />
+
+<img width="1178" height="812" alt="Screenshot 2026-07-31 at 3 31 48 PM" src="https://github.com/user-attachments/assets/6331d76a-1e3c-4894-a27e-2957aaf6009a" />
+
+<img width="1181" height="448" alt="Screenshot 2026-07-31 at 3 33 14 PM" src="https://github.com/user-attachments/assets/896f3463-5f79-4bb1-b294-2cc5fa4cf40d" />
+
+<img width="1213" height="797" alt="Screenshot 2026-07-31 at 3 32 09 PM" src="https://github.com/user-attachments/assets/8c55136a-1579-4240-b7b4-5b34fe5d0412" />
+
+<img width="1206" height="278" alt="Screenshot 2026-07-31 at 3 33 21 PM" src="https://github.com/user-attachments/assets/0869dbaf-b5e9-4ffb-863f-9f4d8a7e25ec" />
 
 
 
@@ -164,17 +154,14 @@ Future Improvements:
 
 The next step would be validating ShotSync with a larger and more diverse dataset. I primarily developed the release detector and analytics using a limited number of athletes (my instructors and peers). Testing with more players would show which thresholds should be personalized and which measurements remain useful across different shooting forms (what values vary greatly between players and which ones stay roughly the same). I would also like to test the system more extensively on a regulation hoop and redesign the hoop sensors into a quicker clip-on mounting system. Custom 3D-printed enclosures could protect the electronics, hold the sensors in repeatable positions, and improve the appearance of both modules. With enough labeled data, I could investigate which wrist measurements correlate with high shooting percentage for individual athletes. Eventually, ShotSync could predict if you make or miss a shot based on your form and mechanics. Because it knows so much about your shot and what happens when you miss, a future version could also connect meaningful baseline deviations with coach-reviewed training recommendations. For example, the dashboard might recognize that an athlete’s snap duration or primary rotation was unusually different and suggest a relevant form-shooting drill or instructional video. 
 
+
 # Second Milestone - Wrist IMU and Release Detection
 
-**Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/y3VAmNlER5Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
-https://www.youtube.com/watch?v=IMOSZjr0L8E 
-
-### Milestone 2 – Wrist-Sleeve Motion Module
+<iframe width="1018" height="572" src="https://www.youtube.com/embed/IMOSZjr0L8E" title="Lochlan M. Milestone 2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 For my second milestone, I designed and built the wrist-sensing module for my basketball shot analytics system. The purpose of this module was to measure the motion of the shooter’s wrist during a release and collect data that could later be compared with the result detected by the hoop module from Milestone 1. The wrist module used an LSM6DS3 inertial measurement unit (IMU) mounted securely to the middle of the back of the shooting wrist, along with an Arduino Nano ESP32 as the temporary development board. 
+
+<img width="275" height="663" alt="Screenshot 2026-07-31 at 4 08 46 PM" src="https://github.com/user-attachments/assets/4ac563b4-bd21-4996-bd4e-be133ef76f6e" />
 
 Detecting a Release:
 
@@ -200,13 +187,10 @@ The Arduino Nano ESP32 was used as a temporary development platform because it a
 
 Milestone 2 Outcome: I created a wrist-mounted IMU system that recorded high-speed motion data, identified likely release candidates, and calculated wrist-motion metrics. I also established that the wrist should measure mechanics and propose release candidates, while the hoop should confirm and classify the shot.
 
-# First Milestone - Hoop Module and Make/Miss Classification
 
-https://www.youtube.com/watch?v=vPbgvMoHv5M
+# First Milestone - Hoop Module and Make/Miss Classification 
 
-**Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/CaCazFBhYKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="1018" height="572" src="https://www.youtube.com/embed/vPbgvMoHv5M" title="Lochlan M. Milestone 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 For my first milestone, I designed and built the first prototype of the hoop module for my basketball shot analytics system. The prototype originally used a microcontroller mounted to the hoop, an infrared (IR) transmitter and receiver pair, and the piezoelectric vibration sensor attached around the rim.  The IR sensor pair was used to detect when a basketball passed completely through the hoop, confirming a made shot, while the piezoelectric sensor was positioned on the rim to measure the vibrations created by ball impacts. 
 
