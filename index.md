@@ -133,14 +133,13 @@ The dashboard displayed:
 *Image of the main analytics page 
 
 <img width="1181" height="448" alt="Screenshot 2026-07-31 at 3 33 14 PM" src="https://github.com/user-attachments/assets/896f3463-5f79-4bb1-b294-2cc5fa4cf40d" />
-*Image of Deep analytics (Form Match Score)
+*Image of Deeper analytics (Form Match Score Graph)
 
 <img width="1213" height="797" alt="Screenshot 2026-07-31 at 3 32 09 PM" src="https://github.com/user-attachments/assets/8c55136a-1579-4240-b7b4-5b34fe5d0412" />
-*Another Image of Deep analytics (Make/Miss Analytics Comaparison)
+*Image of Wrist speed graph and Data 
 
 <img width="1206" height="278" alt="Screenshot 2026-07-31 at 3 33 21 PM" src="https://github.com/user-attachments/assets/0869dbaf-b5e9-4ffb-863f-9f4d8a7e25ec" />
-*Table showing what values differ for shot demographics
-
+*Table showing what values differ for specific shot outcomes
 
 
 Major Challenges and Solutions:
