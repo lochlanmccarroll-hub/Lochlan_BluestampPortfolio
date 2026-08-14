@@ -16,6 +16,7 @@ The XIAO was much better suited for a wearable device because it was a smaller p
 enough processing power to record and filter motion data. Because the IMU was built directly into the XIAO, I no longer needed a separate sensor board or several loose jumper wires. I soldered the remaining connections and mounted the board securely on the back of the shooting wrist. The wrist IMU sampled motion at approximately 104 times per second, or once every 9.6 milliseconds. The system continuously stored recent samples in a circular pre-release buffer. A circular release buffer was used because the XIAO is always saving the newest sensor readings in a fixed-size memory area. When that area fills, new readings replace the oldest ones. Therefore, when a release is detected, the program still has measurements from immediately before detection. When the gyroscope pattern matched the release-candidate conditions (wrist moved in a shot-like motion), the program saved approximately half a second of motion from before the trigger and half a second after it. This created a motion window containing the complete development of the release instead of only measuring the instant when a threshold was crossed.
 
 <img width="425" height="428" alt="image" src="https://github.com/user-attachments/assets/92bfd1fc-b436-4aa6-9a3f-047fbb0ca130" />
+*Diagram of a Circular Pre-Release Buffer
 
 Adding Bluetooth to Both Modules:
 
