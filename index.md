@@ -1,7 +1,7 @@
 # Basketball Shot Tracker
 ShotSync is a wireless basketball analytics system consisting of a wrist-mounted motion sensor (IMU) and a hoop-mounted outcome detector. It pairs wrist mechanics with shot results and reports measurements such as peak wrist speed, snap duration, follow-through, makes, misses, and shooting percentage. It also determines how consistent someones shot is, a important feature to facilitate improvement. The goal is to give athletes objective data they can use to study the consistency of their shooting motion.
 
-| Lochlan McCarroll | Los Altos High School | Electrical Engineering | Incoming Freshman
+| Lochlan McCarroll | Los Altos High School | Electrical Engineering | Incoming Freshman |
   
 # Final Milestone – Wireless Integration and Analytics Dashboard
 
