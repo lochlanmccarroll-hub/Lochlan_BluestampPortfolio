@@ -217,19 +217,38 @@ Milestone 1 Outcome: I created a hoop-mounted system that detected ball passage 
 Here's where you'll put images of your schematics. [Tinkercad](https://www.tinkercad.com/blog/official-guide-to-tinkercad-circuits) and [Fritzing](https://fritzing.org/learning/) are both great resoruces to create professional schematic diagrams, though BSE recommends Tinkercad becuase it can be done easily and for free in the browser. 
 
 # Code
-Here's where you'll put your code. The syntax below places it into a block of code. Follow the guide [here]([url](https://www.markdownguide.org/extended-syntax/)) to learn how to customize it to your project needs. 
 
-```c++
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-  Serial.println("Hello World!");
-}
+The final ShotSync system used these five main programs for the wrist module, hoop module, Python analytics system, and web dashboard.
 
-void loop() {
-  // put your main code here, to run repeatedly:
+## Wrist Firmware
 
-}
+The wrist firmware runs on the **XIAO nRF52840 Sense**. It reads the onboard LSM6DS3TR-C IMU, identifies possible basketball release motions, records the motion data surrounding the release, then sends that data to the computer using Bluetooth Low Energy.
+
+[View the complete wrist firmware](./ShotSync_XIAO_Wrist_Reliable_BLE.ino)
+
+## Hoop Firmware
+
+The hoop firmware runs on the **Arduino Nano ESP32**. It reads the infrared sensor and piezoelectric vibration sensor, determines whether the shot was a clean make, rim-contact make, or rim miss, then sends the result to the computer over Bluetooth Low Energy.
+
+[View the complete hoop firmware](./HoopDetector_NanoESP32_BLE.ino)
+
+## Python Analytics Integrator
+
+The Python integrator connects to both Bluetooth devices at the same time. It receives the wrist-motion data and hoop events, pairs corresponding events together, calculates wrist-motion metrics, and saves the completed shot data.
+
+[View the complete analytics integrator](./milestone3_wireless_integrator_v5.py)
+
+## ShotSync Dashboard
+
+The dashboard is built using Streamlit. It displays the shot result, wrist mechanics, athlete profiles, shooting statistics, Form Match score, motion graphs, and historical comparisons.
+
+[View the complete dashboard code](./shotsync_dashboard_v4_1.py)
+
+## Launcher
+
+The launcher starts both the Python analytics system and the Streamlit dashboard so that the complete ShotSync system can be started with one command in terminal.
+
+[View the complete launcher](./run_shotsync_wireless.py)
 
 
 # Bill of Materials
