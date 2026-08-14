@@ -167,6 +167,7 @@ The next step would be validating ShotSync with a larger and more diverse datase
 For my second milestone, I designed and built the wrist-sensing module for my basketball shot analytics system. The purpose of this module was to measure the motion of the shooter’s wrist during a release and collect data that could later be compared with the result detected by the hoop module from Milestone 1. The wrist module used an LSM6DS3 inertial measurement unit (IMU) mounted securely to the middle of the back of the shooting wrist, along with an Arduino Nano ESP32 as the temporary development board. 
 
 <img width="275" height="663" alt="Screenshot 2026-07-31 at 4 08 46 PM" src="https://github.com/user-attachments/assets/4ac563b4-bd21-4996-bd4e-be133ef76f6e" />
+*Prototype of the NanoESP32 and IMU system
 
 Detecting a Release:
 
