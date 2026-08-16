@@ -190,22 +190,19 @@ Another challenge came from the internal structure of Piezo Discs. Piezo discs a
 
 Milestone 1 Outcome: I created a hoop-mounted system that detected ball passage and rim vibration, filtered duplicate sensor triggers, and classified clean makes, rim-contact makes, and rim misses. Testing also showed that exact rim-impact location could not be measured reliably with the prototype’s vibration sensors.
 
-# Schematics 
-Here's where you'll put images of your schematics. [Tinkercad](https://www.tinkercad.com/blog/official-guide-to-tinkercad-circuits) and [Fritzing](https://fritzing.org/learning/) are both great resoruces to create professional schematic diagrams, though BSE recommends Tinkercad becuase it can be done easily and for free in the browser. 
-
 # Code
 
 The final ShotSync system used these five main programs for the wrist module, hoop module, Python analytics system, and web dashboard.
 
 ## Wrist Firmware
 
-The wrist firmware runs on the **XIAO nRF52840 Sense**. It reads the onboard LSM6DS3TR-C IMU, identifies possible basketball release motions, records the motion data surrounding the release, then sends that data to the computer using Bluetooth Low Energy.
+The wrist firmware runs on the XIAO nRF52840 Sense. It reads the onboard LSM6DS3TR-C IMU, identifies possible basketball release motions, records the motion data surrounding the release, then sends that data to the computer using Bluetooth Low Energy.
 
 [View the complete wrist firmware](./ShotSync_XIAO_Wrist_Reliable_BLE.ino)
 
 ## Hoop Firmware
 
-The hoop firmware runs on the **Arduino Nano ESP32**. It reads the infrared sensor and piezoelectric vibration sensor, determines whether the shot was a clean make, rim-contact make, or rim miss, then sends the result to the computer over Bluetooth Low Energy.
+The hoop firmware runs on the Arduino Nano ESP32. It reads the infrared sensor and piezoelectric vibration sensor, determines whether the shot was a clean make, rim-contact make, or rim miss, then sends the result to the computer over Bluetooth Low Energy.
 
 [View the complete hoop firmware](./HoopDetector_NanoESP32_BLE.ino)
 
